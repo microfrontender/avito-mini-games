@@ -1,0 +1,12 @@
+@font-face {
+    font-family: 'DisposableDroid BB';
+    src: url('DisposableDroidBB.eot');
+    src: url('DisposableDroidBB.eot?#iefix') format('embedded-opentype'),
+        url('DisposableDroidBB.woff2') format('woff2'),
+        url('DisposableDroidBB.woff') format('woff'),
+        url('DisposableDroidBB.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
