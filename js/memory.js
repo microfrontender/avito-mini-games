@@ -1,11 +1,10 @@
 
 const Memo = function (selector) {
-	let score = 0;
-	let isInit = false;
-	let gameEnd = false;
+
+	// Начальные данные
+	
 	const cardSize = 60;
 	const cardMargin = 6;
-	let interactive = true;
 	const cardSource = [
 		{ id: 1, img: '1' },
 		{ id: 2, img: '1' },
@@ -28,10 +27,15 @@ const Memo = function (selector) {
 		{ id: 19, img: '1' },
 		{ id: 20, img: '1' },
 	];
+	let score = 0;
+	let isInit = false;
+	let gameEnd = false;
+	let interactive = true;
 	let cardsArray = [];
-
 	let answers = [];
 	let answerCounter = 0;
+
+	// Инициализация PIXI
 
 	const gameContainer = document.querySelector(selector);
 	const app = new PIXI.Application({
@@ -44,10 +48,14 @@ const Memo = function (selector) {
 	});
 	gameContainer.appendChild(app.view);
 
+	// Создание контейнера сетки карточек
+
 	let grid = new PIXI.Container();
 	grid.x = 27;
 	grid.y = 90;
 	app.stage.addChild(grid);
+
+	// Создание контейнера счета
 
 	let scoreWrap = new PIXI.Container();
 	let scoreText = new PIXI.Text('SCORE');
@@ -56,11 +64,12 @@ const Memo = function (selector) {
 	scoreWrap.addChild(scoreText);
 	scoreWrap.addChild(scoreValue);
 
+	// Создание финального экрана с кнопкой рестарта
+
 	let winScreen = new PIXI.Container();
 	winScreen.width = 375;
 	winScreen.height = 667;
 	winScreen.alpha = 0;
-	// winScreen.buttonMode = false;
 	let winScreenImg = new PIXI.Sprite.from('./assets/img/win-screen.svg');
 	let screenBtn= new PIXI.Sprite.from('./assets/img/restart-btn.svg');
 	app.stage.addChild(winScreen);
@@ -75,6 +84,8 @@ const Memo = function (selector) {
 		fadeOut(winScreen);
 	});
 
+	// Инициализация(рестар) игры
+
 	function init(){
 		generationCards();
 		drawGrid(cardsArray, 5);
@@ -87,9 +98,28 @@ const Memo = function (selector) {
 		screenBtn.interactive = false;
 	}
 	init();
+
+
+	// Отрисовка счета
+
+	function drawScore() {
+		scoreValue.style.fill = 0x000000;
+		scoreValue.style.fontSize = 40;
+		scoreValue.style.fontFamily = 'DisposableDroid BB';
+		scoreValue.text = `000`;
+		scoreValue.y = 6;
+		scoreValue.x = 315;
+		scoreText.style.fill = 0x000000;
+		scoreText.style.fontSize = 40;
+		scoreText.style.fontFamily = 'DisposableDroid BB';
+		scoreText.y = 6;
+		scoreText.x = 10;
+		scoreText.style.textTransform = 'uppercase';
+	}
+
+	// Создание коллекции карточек и загрузка в сетку
 	
-	function generationCards() {
-		
+	function generationCards() {	
 		grid.children = [];
 		cardsArray = [];
 		let array1 = shuffleCards(cardSource);
@@ -130,7 +160,9 @@ const Memo = function (selector) {
 		});
 		
 	}
-	
+		
+	// Перемешивание карточек
+
 	function shuffleCards(array) {
 		let counter = array.length,
 			temp,
@@ -144,7 +176,9 @@ const Memo = function (selector) {
 		}
 		return array;
 	}
-	
+
+	// Отрисовка сетки 
+
 	function drawGrid(arr, col) {
 		let len = arr.length;
 		let box;
@@ -154,6 +188,8 @@ const Memo = function (selector) {
 			box.y = parseInt(j / col) * (cardSize + cardMargin);
 		}
 	}
+
+	// Выбор карты
 
 	function selectCard(item, index) {
 		if (interactive) {
@@ -177,6 +213,8 @@ const Memo = function (selector) {
 
 		}
 	}
+
+	// Сравнение выбранных карт
 
 	function comparison() {
 		interactive = false;
@@ -204,6 +242,39 @@ const Memo = function (selector) {
 			interactive = true;
 		}, 500);
 	}
+	
+	// Обновление счета
+
+	function updateScore() {
+		score += 1;
+		let displayScore;
+		if(score >= 10){
+			displayScore = `0${score}`;
+		}else{
+			displayScore = `00${score}`;
+		}
+		scoreValue.text = displayScore;
+		if (score === cardSource.length) {
+			gameWin();
+		}
+	}
+
+	// Игра пройдена
+
+	function gameWin() {
+		interactive = false;
+		setTimeout(() => {
+			
+			fadeIn(winScreen);
+			winScreen.interactive = true;
+			screenBtn.interactive = true;
+		}, 1000);
+		
+		
+	}
+
+	// Анимационные эффекты
+
 	function fadeOut(item) {
 		item.alpha = 1;
 		function animationUpdate() {
@@ -223,46 +294,6 @@ const Memo = function (selector) {
 			}
 		}
 		app.ticker.add(animationUpdate);
-	}
-	function updateScore() {
-		score += 1;
-		let displayScore;
-		if(score >= 10){
-			displayScore = `0${score}`;
-		}else{
-			displayScore = `00${score}`;
-		}
-		scoreValue.text = displayScore;
-		if (score === cardSource.length) {
-			gameWin();
-		}
-	}
-
-	function drawScore() {
-		scoreValue.style.fill = 0x000000;
-		scoreValue.style.fontSize = 40;
-		scoreValue.style.fontFamily = 'DisposableDroid BB';
-		scoreValue.text = `000`;
-		scoreValue.y = 6;
-		scoreValue.x = 315;
-		scoreText.style.fill = 0x000000;
-		scoreText.style.fontSize = 40;
-		scoreText.style.fontFamily = 'DisposableDroid BB';
-		scoreText.y = 6;
-		scoreText.x = 10;
-		scoreText.style.textTransform = 'uppercase';
-	}
-	
-	function gameWin() {
-		interactive = false;
-		setTimeout(() => {
-			
-			fadeIn(winScreen);
-			winScreen.interactive = true;
-			screenBtn.interactive = true;
-		}, 1000);
-		
-		
 	}
 
 };
