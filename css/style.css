@@ -1,9 +1,28 @@
+
+body{
+	display: flex;
+	font-family: 'DisposableDroid BB';
+}
+*{
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	flex-shrink: 0;
+}
 canvas{
+	margin: 0 20px;
 	width: 376px;
 	height: 768px;
 	border: 1px solid #000;
 }
-body{
-	
-	font-family: 'DisposableDroid BB';
+@media only screen and (max-width: 768px){
+	body{
+		flex-direction: column;
+		width: 100%;
+	}
+	canvas{
+		margin: 20px auto;
+		width: 100% !important;
+		height: auto !important;
+	}
 }

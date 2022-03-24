@@ -28,8 +28,6 @@ const Memo = function (selector) {
 		{ id: 20, img: '1' },
 	];
 	let score = 0;
-	let isInit = false;
-	let gameEnd = false;
 	let interactive = true;
 	let cardsArray = [];
 	let answers = [];
@@ -136,16 +134,18 @@ const Memo = function (selector) {
 				bgTexture: new PIXI.Texture.from(`./assets/img/memo/bg.svg`),
 				bgTextureHover: new PIXI.Texture.from(`./assets/img/memo/bg-hover.svg`),
 				imgTexture: new PIXI.Texture.from(
-					`./assets/img/memo/${element.img}.svg`
+					`./assets/img/memo/${element.img}.png`
 				),
 				imgTextureHover: new PIXI.Texture.from(
-					`./assets/img/memo/${element.img}-hover.svg`
+					`./assets/img/memo/${element.img}-hover.png`
 				),
 			};
 			let bg = new PIXI.Sprite.from(item.option.bgTexture);
 			let img = new PIXI.Sprite.from(item.option.imgTexture);
-			img.x = 12.5;
-			img.y = 12.5;
+			img.x = 12;
+			img.y = 13;
+			img.width = 35;
+			img.height = 35;
 			let text = new PIXI.Text(element.id);
 			text.style.fill = 0x26EEFB;
 			text.style.fontSize = 16;

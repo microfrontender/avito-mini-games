@@ -1,2 +1,2 @@
 new Memo('#memo-game');
-new Memo('#heart-game');
+new Heart('#heart-game');
