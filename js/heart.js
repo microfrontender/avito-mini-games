@@ -223,7 +223,7 @@ const Heart = function (selector) {
 		}
 	}
 
-	function bulletMove(bullet, index) {
+	function bulletMove(bullet) {
 		
 		let indexArray = [];
 		for(let i = 0; i < cardsSource.length; i++){
@@ -231,28 +231,25 @@ const Heart = function (selector) {
 			indexArray.push(index);
 		}
 
-		const existsIndex = indexArray.filter((index) => {
+		let existsIndex = indexArray.filter((index) => {
 			return (index <= cardsArray.length);
 		});
 
 		function animationUpdate() {
-			const undestroyedCards = existsIndex.filter((index) => {
+			let undestroyedCards = existsIndex.filter((index) => {
 				if(!cardsArray[index].isDestroyed){
 					return true;
 				}else{
 					return false;
 				}
 			});
-			const nearbyCard = cardsArray[undestroyedCards[undestroyedCards.length - 1]];
-			console.log(nearbyCard);
+			let nearbyCard = cardsArray[undestroyedCards[undestroyedCards.length - 1]];
 			let nearbyCardY = 0;
 			if(nearbyCard !== undefined){
 				nearbyCardY = nearbyCard.y + nearbyCard.height + grid.y;
 			}
 			bullet.y -= 2;
 			
-			// console.log(bullet.y);
-			// console.log(nearbyCardY);
 			if(undestroyedCards.length > 0 && bullet.y <= nearbyCardY){
 				nearbyCard.isDestroyed = true;
 				if(nearbyCard.id !==0){
@@ -263,15 +260,14 @@ const Heart = function (selector) {
 				}
 				if(nearbyCard.id === 1){
 					gameWin();
+					app.ticker.remove(animationUpdate);
+					battleground.children = [];
 				}
-				
-			} else if (bullet.y <= 0) {
+			} else if (bullet.y <= 2) {
 				app.ticker.remove(animationUpdate);
 				bullet.destroy();
 				shootCount -= 1;
-			} else{
-				console.log('dsd');
-			}
+			} 
 		}
 		app.ticker.add(animationUpdate);
 	}
