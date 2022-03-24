@@ -1,10 +1,10 @@
-window.addEventListener('load', () => {
-	// setting
+
+const Memo = function (selector) {
 	let score = 0;
-	let init = false;
+	let isInit = false;
 	let gameEnd = false;
-	let cardSize = 60;
-	let cardMargin = 6;
+	const cardSize = 60;
+	const cardMargin = 6;
 	let interactive = true;
 	const cardSource = [
 		{ id: 1, img: '1' },
@@ -30,7 +30,10 @@ window.addEventListener('load', () => {
 	];
 	let cardsArray = [];
 
-	const gameContainer = document.querySelector('#memo-game');
+	let answers = [];
+	let answerCounter = 0;
+
+	const gameContainer = document.querySelector(selector);
 	const app = new PIXI.Application({
 		backgroundColor: 0xffffff,
 		width: 375,
@@ -57,13 +60,38 @@ window.addEventListener('load', () => {
 	winScreen.width = 375;
 	winScreen.height = 667;
 	winScreen.alpha = 0;
-	winScreen.interactive = false;
 	// winScreen.buttonMode = false;
 	let winScreenImg = new PIXI.Sprite.from('./assets/img/win-screen.svg');
+	let screenBtn= new PIXI.Sprite.from('./assets/img/restart-btn.svg');
 	app.stage.addChild(winScreen);
 	winScreen.addChild(winScreenImg);
 
+	winScreen.addChild(screenBtn);
+	screenBtn.x = 147;
+	screenBtn.y = 525;
+	screenBtn.buttonMode = true;
+	screenBtn.on('pointerdown', () => {
+		init();
+		fadeOut(winScreen);
+	});
+
+	function init(){
+		generationCards();
+		drawGrid(cardsArray, 5);
+		drawScore();
+		interactive = true;
+		answers = [];
+		answerCounter = 0;
+		score = 0;
+		winScreen.interactive = false;
+		screenBtn.interactive = false;
+	}
+	init();
+	
 	function generationCards() {
+		
+		grid.children = [];
+		cardsArray = [];
 		let array1 = shuffleCards(cardSource);
 		let array2 = shuffleCards(cardSource);
 		let resultArray = array1.concat(array2);
@@ -89,20 +117,20 @@ window.addEventListener('load', () => {
 			img.x = 12.5;
 			img.y = 12.5;
 			let text = new PIXI.Text(element.id);
-			text.style.fill = 0xff1010;
+			text.style.fill = 0x26EEFB;
 			text.style.fontSize = 16;
 			item.addChild(bg);
 			item.addChild(img);
 			item.addChild(text);
 			grid.addChild(item);
-
 			cardsArray.push(item);
 			item.on('pointerdown', () => {
 				selectCard(item, index);
 			});
 		});
+		
 	}
-	generationCards();
+	
 	function shuffleCards(array) {
 		let counter = array.length,
 			temp,
@@ -116,7 +144,7 @@ window.addEventListener('load', () => {
 		}
 		return array;
 	}
-	drawGrid(cardsArray, 5);
+	
 	function drawGrid(arr, col) {
 		let len = arr.length;
 		let box;
@@ -127,8 +155,6 @@ window.addEventListener('load', () => {
 		}
 	}
 
-	let answers = [];
-	let answerCounter = 0;
 	function selectCard(item, index) {
 		if (interactive) {
 			if (!item.option.selected) {
@@ -149,15 +175,13 @@ window.addEventListener('load', () => {
 				comparison();
 			}
 
-			console.log(`answerCounter:`);
-			console.log(answers);
 		}
 	}
 
 	function comparison() {
 		interactive = false;
 		setTimeout(() => {
-			if (answers[0].id === answers[1].id) {
+			if (answers.length>0 && answers[0].id === answers[1].id) {
 				answers.forEach((item) => {
 					item.interactive = false;
 					item.buttonMode = false;
@@ -184,10 +208,8 @@ window.addEventListener('load', () => {
 		item.alpha = 1;
 		function animationUpdate() {
 			item.alpha -= 0.05;
-			console.log('ss');
 			if (item.alpha <= 0) {
 				app.ticker.remove(animationUpdate);
-				console.log('stop');
 			}
 		}
 		app.ticker.add(animationUpdate);
@@ -198,14 +220,19 @@ window.addEventListener('load', () => {
 			item.alpha += 0.05;
 			if (item.alpha >= 1) {
 				app.ticker.remove(animationUpdate);
-				console.log('stop');
 			}
 		}
 		app.ticker.add(animationUpdate);
 	}
 	function updateScore() {
 		score += 1;
-		scoreValue.text = `00${score}`;
+		let displayScore;
+		if(score >= 10){
+			displayScore = `0${score}`;
+		}else{
+			displayScore = `00${score}`;
+		}
+		scoreValue.text = displayScore;
 		if (score === cardSource.length) {
 			gameWin();
 		}
@@ -225,9 +252,18 @@ window.addEventListener('load', () => {
 		scoreText.x = 10;
 		scoreText.style.textTransform = 'uppercase';
 	}
-	drawScore();
+	
 	function gameWin() {
-		fadeIn(winScreen);
-		winScreen.interactive = true;
+		interactive = false;
+		setTimeout(() => {
+			
+			fadeIn(winScreen);
+			winScreen.interactive = true;
+			screenBtn.interactive = true;
+		}, 1000);
+		
+		
 	}
-});
+
+};
+

@@ -1,0 +1,1 @@
+new Memo('#memo-game');
