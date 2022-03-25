@@ -68,14 +68,19 @@ const Memo = function (selector) {
 	winScreen.width = 375;
 	winScreen.height = 667;
 	winScreen.alpha = 0;
-	let winScreenImg = new PIXI.Sprite.from('./assets/img/win-screen.svg');
-	let screenBtn= new PIXI.Sprite.from('./assets/img/restart-btn.svg');
-	app.stage.addChild(winScreen);
-	winScreen.addChild(winScreenImg);
-
-	winScreen.addChild(screenBtn);
+	let winScreenImg = new PIXI.Sprite.from('./assets/img/win-screen.png');
+	winScreenImg.width = 375;
+	winScreenImg.height = 667;
+	let screenBtn= new PIXI.Sprite.from('./assets/img/restart-btn.png');
+		
+	screenBtn.width = 82;
+	screenBtn.height = 82;
 	screenBtn.x = 147;
 	screenBtn.y = 525;
+	app.stage.addChild(winScreen);
+	winScreen.addChild(winScreenImg);
+	winScreen.addChild(screenBtn);
+
 	screenBtn.buttonMode = true;
 	screenBtn.on('pointerdown', () => {
 		init();

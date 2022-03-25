@@ -1,8 +1,6 @@
-
 const Heart = function (selector) {
-
 	// Начальные данные
-	
+
 	const cardSize = 22;
 	const cardMargin = 2;
 	const cardsSource = [
@@ -16,16 +14,20 @@ const Heart = function (selector) {
 		[2, 2, 2, 2, 2, 1, 1, 1, 2, 2, 2, 2, 2],
 		[2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2],
 		[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-		[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+		[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 	];
-	let score = 0;
-	let interactive = true;
-	let cardsArray = [];
-	let answers = [];
-	let answerCounter = 0;
-	let playerColumn = 6;
-	let isFocus = false;
-	
+
+	let score,
+		interactive,
+		cardsArray = [],
+		answers = [],
+		answerCounter,
+		blackCardCounter,
+		playerColumn,
+		isFocus = false,
+		shootCount,
+		gameEnded;
+		
 	// Инициализация PIXI
 
 	const gameContainer = document.querySelector(selector);
@@ -38,17 +40,17 @@ const Heart = function (selector) {
 		autoDensity: true,
 	});
 	gameContainer.appendChild(app.view);
-	
+
 	// Проверка фокуса на данном canvas
-	
-	gameContainer.querySelector('canvas').addEventListener('click', ()=>{
+
+	gameContainer.querySelector('canvas').addEventListener('click', () => {
 		isFocus = true;
 		document.addEventListener('click', checkFocus);
 	});
-	function checkFocus(e){
-		if(e.target === gameContainer.querySelector('canvas')){
+	function checkFocus(e) {
+		if (e.target === gameContainer.querySelector('canvas')) {
 			isFocus = true;
-		}else{
+		} else {
 			isFocus = false;
 			document.removeEventListener('click', checkFocus, false);
 		}
@@ -69,7 +71,7 @@ const Heart = function (selector) {
 	app.stage.addChild(scoreWrap);
 	scoreWrap.addChild(scoreText);
 	scoreWrap.addChild(scoreValue);
-	
+
 	// Создание контейнера навигации
 
 	let nav = new PIXI.Container();
@@ -85,36 +87,42 @@ const Heart = function (selector) {
 	battleground.y = 0;
 
 	app.stage.addChild(battleground);
-	
+
 	// Создание игрока
 
 	let player = new PIXI.Sprite.from('./assets/img/player.svg');
-	
+
 	app.stage.addChild(player);
 
 	// Создание финального экрана с кнопкой рестарта
 
-	let winScreen = new PIXI.Container();
-	winScreen.width = 375;
-	winScreen.height = 667;
-	winScreen.alpha = 0;
-	let winScreenImg = new PIXI.Sprite.from('./assets/img/win-screen.svg');
-	let screenBtn = new PIXI.Sprite.from('./assets/img/restart-btn.svg');
-	app.stage.addChild(winScreen);
-	winScreen.addChild(winScreenImg);
+	let endScreen = new PIXI.Container();
+	endScreen.width = 375;
+	endScreen.height = 667;
+	endScreen.alpha = 0;
+	let endScreenWin = new PIXI.Texture.from(`./assets/img/win-screen.png`);
+	let endScreenLoss = new PIXI.Texture.from(`./assets/img/loss-screen.png`);
+	let endScreenImg = new PIXI.Sprite.from(endScreenWin);
+	endScreenImg.width = 375;
+	endScreenImg.height = 667;
+	let screenBtn = new PIXI.Sprite.from('./assets/img/restart-btn.png');
+	screenBtn.width = 82;
+	screenBtn.height = 82;
+	app.stage.addChild(endScreen);
+	endScreen.addChild(endScreenImg);
 
-	winScreen.addChild(screenBtn);
+	endScreen.addChild(screenBtn);
 	screenBtn.x = 147;
 	screenBtn.y = 525;
 	screenBtn.buttonMode = true;
 	screenBtn.on('pointerdown', () => {
 		init();
-		fadeOut(winScreen);
+		fadeOut(endScreen);
 	});
 
 	// Инициализация(рестар) игры
 
-	function init(){
+	function init() {
 		generationCards();
 		drawGrid(cardsArray, cardsSource[0].length);
 		drawScore();
@@ -125,11 +133,13 @@ const Heart = function (selector) {
 		answerCounter = 0;
 		score = 0;
 		playerColumn = 6;
-		winScreen.interactive = false;
+		endScreen.interactive = false;
 		screenBtn.interactive = false;
+		gameEnded = false;
+		shootCount = 0;
+		battleground.children = [];
 	}
 	init();
-	
 
 	// Отрисовка счета
 
@@ -149,14 +159,13 @@ const Heart = function (selector) {
 	}
 
 	// Отрисовка кнопок
-	
-	
+
 	function drawBtn(imgsrc, imgx, imgy, imgwidth, imgheight, x, _fun) {
 		let btn = new PIXI.Container();
 		let graph = new PIXI.Graphics();
 		let image = new PIXI.Sprite.from(imgsrc);
-		graph.beginFill(0xFDE033);
-		graph.drawRect(0,0,121,74);
+		graph.beginFill(0xfde033);
+		graph.drawRect(0, 0, 121, 74);
 		graph.endFill();
 		image.x = imgx;
 		image.y = imgy;
@@ -170,24 +179,37 @@ const Heart = function (selector) {
 		btn.interactive = true;
 		btn.buttonMode = true;
 		btn.on('pointerdown', () => {
-			_fun();
+			if(!gameEnded){
+				_fun();
+			}
 		});
 	}
 
 	// Отрисовка навигации
-	
+
 	function drawNav() {
 		nav.children = [];
-		new drawBtn('./assets/img/left-arrow.png', 51, 23, 19.2, 32,  0, moveLeft);
-		new drawBtn('./assets/img/circle.png', 45, 23, 32, 32,  127, shoot);
-		new drawBtn('./assets/img/right-arrow.png', 55, 23, 19.2, 32,  254, moveRight);
+		new drawBtn('./assets/img/left-arrow.png', 51, 23, 19.2, 32, 0, moveLeft);
+		new drawBtn('./assets/img/circle.png', 45, 23, 32, 32, 127, shoot);
+		new drawBtn(
+			'./assets/img/right-arrow.png',
+			55,
+			23,
+			19.2,
+			32,
+			254,
+			moveRight
+		);
 	}
 
+	
+	// Навигация по нажатию стрелочек
+
 	let isPressed = false;
-	document.addEventListener('keydown', function(event) {
-		if(!isPressed && isFocus){
+	document.addEventListener('keydown', function (event) {
+		if (!isPressed && isFocus && !gameEnded) {
 			isPressed = true;
-			
+
 			switch (event.key) {
 				case 'ArrowLeft':
 					moveLeft();
@@ -198,88 +220,113 @@ const Heart = function (selector) {
 				case 'ArrowRight':
 					moveRight();
 					break;
-			
+
 				default:
 					break;
 			}
 		}
 	});
-	document.addEventListener('keyup', function(event) {
+	document.addEventListener('keyup', function (event) {
 		isPressed = false;
 	});
 
-	let shootCount = 0; 
-	function shoot(){
-		if(shootCount <5){
-		bullet = new PIXI.Graphics();
-		bullet.beginFill(0x000000);
-		bullet.drawRect(0,0,11,11);
-		bullet.endFill();
-		bullet.x = player.x + 22;
-		bullet.y = player.y;
-		battleground.addChild(bullet);
-		bulletMove(bullet, shootCount);
-		shootCount +=1;
+	// Генерация снаряда
+	
+	function shoot() {
+		if (shootCount < 5) {
+			bullet = new PIXI.Graphics();
+			bullet.beginFill(0x000000);
+			bullet.drawRect(0, 0, 11, 11);
+			bullet.endFill();
+			bullet.x = player.x + 22;
+			bullet.y = player.y;
+			battleground.addChild(bullet);
+			bulletMove(bullet, shootCount);
+			shootCount += 1;
 		}
 	}
 
+	// Анимация снаряда
+
 	function bulletMove(bullet) {
-		
+
+		// Сортировка индесов в текущей колонке массива
+
 		let indexArray = [];
-		for(let i = 0; i < cardsSource.length; i++){
+		for (let i = 0; i < cardsSource.length; i++) {
 			let index = i * cardsSource[0].length + playerColumn;
 			indexArray.push(index);
 		}
 
 		let existsIndex = indexArray.filter((index) => {
-			return (index <= cardsArray.length);
+			return index <= cardsArray.length;
 		});
 
 		function animationUpdate() {
-			let undestroyedCards = existsIndex.filter((index) => {
-				if(!cardsArray[index].isDestroyed){
-					return true;
-				}else{
-					return false;
+			// Для анимации игра должна быть не закончена
+			if(!gameEnded){
+
+				// Крайний не уничтоженный блок в колонке полета снаряда
+
+				let undestroyedCards = existsIndex.filter((index) => {
+					if (!cardsArray[index].isDestroyed) {
+						return true;
+					} else {
+						return false;
+					}
+				});
+				let nearbyCard = cardsArray[undestroyedCards[undestroyedCards.length - 1]];
+				let nearbyCardY = 0;
+				if (nearbyCard !== undefined) {
+					nearbyCardY = nearbyCard.y + nearbyCard.height + grid.y;
 				}
-			});
-			let nearbyCard = cardsArray[undestroyedCards[undestroyedCards.length - 1]];
-			let nearbyCardY = 0;
-			if(nearbyCard !== undefined){
-				nearbyCardY = nearbyCard.y + nearbyCard.height + grid.y;
-			}
-			bullet.y -= 2;
-			
-			if(undestroyedCards.length > 0 && bullet.y <= nearbyCardY){
-				nearbyCard.isDestroyed = true;
-				if(nearbyCard.id !==0){
-					nearbyCard.alpha = 0;
-					app.ticker.remove(animationUpdate);
-					bullet.destroy();
-					shootCount -= 1;
+				bullet.y -= 2;
+
+				// Просчет столкновения
+
+				if (undestroyedCards.length > 0 && bullet.y <= nearbyCardY) {
+					nearbyCard.isDestroyed = true;
+					
+					if (nearbyCard.id === 1) {
+						nearbyCard.alpha = 0;
+						gameEnd('lose');
+						destroyBullet();
+						battleground.children = [];
+					}else if (nearbyCard.id === 2) {
+						nearbyCard.alpha = 0;
+						updateScore();
+						destroyBullet();
+					}
+				} else if (bullet.y <= 2) {
+					destroyBullet();
 				}
-				if(nearbyCard.id === 1){
-					gameWin();
-					app.ticker.remove(animationUpdate);
-					battleground.children = [];
-				}
-			} else if (bullet.y <= 2) {
+			}else{
 				app.ticker.remove(animationUpdate);
-				bullet.destroy();
-				shootCount -= 1;
-			} 
+			}
 		}
 		app.ticker.add(animationUpdate);
+
+		function destroyBullet(){
+			app.ticker.remove(animationUpdate);
+			bullet.destroy();
+			shootCount -= 1;
+		}
 	}
-	function moveLeft(){
-		if(player.x >= 18){
-			playerColumn -=1;
+	
+	// Движение игрока влево
+
+	function moveLeft() {
+		if (player.x >= 18) {
+			playerColumn -= 1;
 			player.x -= 24;
 		}
 	}
-	function moveRight(){
-		if(player.x <= 300){
-			playerColumn +=1;
+
+	// Движение игрока вправо
+
+	function moveRight() {
+		if (player.x <= 300) {
+			playerColumn += 1;
 			player.x += 24;
 		}
 	}
@@ -293,35 +340,35 @@ const Heart = function (selector) {
 	}
 
 	// Создание коллекции карточек и загрузка в сетку
-	
-	function generationCards() {	
+
+	function generationCards() {
 		grid.children = [];
 		cardsArray = [];
-		for(let i = 0; i < cardsSource.length; i++){
-			for(let j = 0; j < cardsSource[i].length; j++){
+		blackCardCounter = 0;
+		for (let i = 0; i < cardsSource.length; i++) {
+			for (let j = 0; j < cardsSource[i].length; j++) {
 				let item = new PIXI.Container();
 				let graph = new PIXI.Graphics();
 				item.id = cardsSource[i][j];
 				item.isDestroyed = false;
-				if(cardsSource[i][j] === 2){
+				if (cardsSource[i][j] === 2) {
 					graph.beginFill(0x000000);
-				} else if(cardsSource[i][j] === 1){
-					graph.beginFill(0xFDE033);
-				} else{
-					graph.beginFill(0xFFFFFF);
+					blackCardCounter += 1;
+				} else if (cardsSource[i][j] === 1) {
+					graph.beginFill(0xfde033);
+				} else {
+					graph.beginFill(0xffffff);
 				}
-				graph.drawRect(0,0,cardSize,cardSize);
+				graph.drawRect(0, 0, cardSize, cardSize);
 				graph.endFill();
 				item.addChild(graph);
 				grid.addChild(item);
 				cardsArray.push(item);
 			}
 		}
-		
 	}
 
-	// console.log(cardsArray[31].y);
-	// Отрисовка сетки 
+	// Отрисовка сетки
 
 	function drawGrid(arr, col) {
 		let len = arr.length;
@@ -332,35 +379,45 @@ const Heart = function (selector) {
 			box.y = parseInt(j / col) * (cardSize + cardMargin);
 		}
 	}
-	
+
 	// Обновление счета
 
 	function updateScore() {
 		score += 1;
 		let displayScore;
-		if(score >= 10){
+		if (score >= 10) {
 			displayScore = `0${score}`;
-		}else{
+		} else {
 			displayScore = `00${score}`;
 		}
 		scoreValue.text = displayScore;
-		if (score === cardsSource.length) {
-			gameWin();
+		if (score === blackCardCounter) {
+			gameEnd();
 		}
 	}
 
 	// Игра пройдена
 
-	function gameWin() {
+	function gameEnd(result) {
 		interactive = false;
-		setTimeout(() => {
-			
-			fadeIn(winScreen);
-			winScreen.interactive = true;
-			screenBtn.interactive = true;
-		}, 1000);
+		gameEnded = true;
 		
-		
+
+		if(result === 'lose'){
+			endScreenImg.texture = endScreenLoss;
+			setTimeout(() => {
+				fadeIn(endScreen);
+				endScreen.interactive = true;
+				screenBtn.interactive = true;
+			}, 500);
+		}else{
+			endScreenImg.texture = endScreenWin;
+			setTimeout(() => {
+				fadeIn(endScreen);
+				endScreen.interactive = true;
+				screenBtn.interactive = true;
+			}, 1000);
+		}
 	}
 
 	// Анимационные эффекты
@@ -385,6 +442,4 @@ const Heart = function (selector) {
 		}
 		app.ticker.add(animationUpdate);
 	}
-
 };
-
