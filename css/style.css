@@ -1,7 +1,10 @@
 
 body{
 	display: flex;
+	justify-content: center;
+	align-items: center;
 	font-family: 'DisposableDroid BB';
+	height: 100vh;
 }
 *{
 	margin: 0;
@@ -9,7 +12,7 @@ body{
 	box-sizing: border-box;
 	flex-shrink: 0;
 }
-canvas{
+.game canvas{
 	margin: 0 20px;
 	width: 376px;
 	height: 768px;
@@ -19,10 +22,20 @@ canvas{
 	body{
 		flex-direction: column;
 		width: 100%;
+		height: auto;
+		justify-content: flex-start;
 	}
-	canvas{
-		margin: 20px auto;
-		width: 100% !important;
+	.game{
+		display: flex;
+		margin: 20px 0;
+		width: 100%;
+		height: auto
+	}
+	.game canvas{
+		margin: 0 auto;
+		width: auto !important;
+		max-width: 100%;
+		max-height: calc(var(--vh, 1vh) * 100) !important;
 		height: auto !important;
 	}
 }

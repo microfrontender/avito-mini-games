@@ -3,6 +3,8 @@ const Memo = function (selector) {
 
 	// Начальные данные
 	
+	const ASSETS_PATH = './assets/img/';
+	
 	const cardSize = 60;
 	const cardMargin = 6;
 	const cardSource = [
@@ -46,6 +48,10 @@ const Memo = function (selector) {
 	});
 	gameContainer.appendChild(app.view);
 
+	app.renderer.plugins.interaction.autoPreventDefault = false;
+	app.renderer.view.style.touchAction = 'auto';
+	
+
 	// Создание контейнера сетки карточек
 
 	let grid = new PIXI.Container();
@@ -68,10 +74,10 @@ const Memo = function (selector) {
 	winScreen.width = 375;
 	winScreen.height = 667;
 	winScreen.alpha = 0;
-	let winScreenImg = new PIXI.Sprite.from('./assets/img/win-screen.png');
+	let winScreenImg = new PIXI.Sprite.from(`${ASSETS_PATH}win-screen.png`);
 	winScreenImg.width = 375;
 	winScreenImg.height = 667;
-	let screenBtn= new PIXI.Sprite.from('./assets/img/restart-btn.png');
+	let screenBtn= new PIXI.Sprite.from(`${ASSETS_PATH}restart-btn.png`);
 		
 	screenBtn.width = 82;
 	screenBtn.height = 82;
@@ -125,8 +131,8 @@ const Memo = function (selector) {
 	function generationCards() {	
 		grid.children = [];
 		cardsArray = [];
-		let array1 = shuffleCards(cardSource);
-		let array2 = shuffleCards(cardSource);
+		let array1 = shuffleCards([...cardSource]);
+		let array2 = shuffleCards([...cardSource]);
 		let resultArray = array1.concat(array2);
 		resultArray.forEach((element, index) => {
 			let item = new PIXI.Container();
@@ -136,13 +142,13 @@ const Memo = function (selector) {
 			item.answerId = null;
 			item.option = {
 				selected: false,
-				bgTexture: new PIXI.Texture.from(`./assets/img/memo/bg.svg`),
-				bgTextureHover: new PIXI.Texture.from(`./assets/img/memo/bg-hover.svg`),
+				bgTexture: new PIXI.Texture.from(`${ASSETS_PATH}memo/bg.svg`),
+				bgTextureHover: new PIXI.Texture.from(`${ASSETS_PATH}memo/bg-hover.svg`),
 				imgTexture: new PIXI.Texture.from(
-					`./assets/img/memo/${element.img}.png`
+					`${ASSETS_PATH}memo/${element.img}.png`
 				),
 				imgTextureHover: new PIXI.Texture.from(
-					`./assets/img/memo/${element.img}-hover.png`
+					`${ASSETS_PATH}memo/${element.img}-hover.png`
 				),
 			};
 			let bg = new PIXI.Sprite.from(item.option.bgTexture);
@@ -235,17 +241,21 @@ const Memo = function (selector) {
 
 				updateScore();
 			} else {
-				answers.forEach((item) => {
-					item.getChildAt(0).texture = item.option.bgTexture;
-					item.getChildAt(1).texture = item.option.imgTexture;
-					item.answerId = null;
-					item.option.selected = false;
-				});
+				setTimeout(() => {
+					answers.forEach((item) => {
+						item.getChildAt(0).texture = item.option.bgTexture;
+						item.getChildAt(1).texture = item.option.imgTexture;
+						item.answerId = null;
+						item.option.selected = false;
+					});
+				}, 200);
 			}
-			answers = [];
-			answerCounter = 0;
-			interactive = true;
-		}, 500);
+			setTimeout(() => {
+				answers = [];
+				answerCounter = 0;
+				interactive = true;
+			}, 200);
+		}, 200);
 	}
 	
 	// Обновление счета
@@ -268,12 +278,9 @@ const Memo = function (selector) {
 
 	function gameWin() {
 		interactive = false;
-		setTimeout(() => {
-			
-			fadeIn(winScreen);
-			winScreen.interactive = true;
-			screenBtn.interactive = true;
-		}, 1000);
+		fadeIn(winScreen);
+		winScreen.interactive = true;
+		screenBtn.interactive = true;
 		
 		
 	}
@@ -282,8 +289,8 @@ const Memo = function (selector) {
 
 	function fadeOut(item) {
 		item.alpha = 1;
-		function animationUpdate() {
-			item.alpha -= 0.05;
+		function animationUpdate(delta) {
+			item.alpha -= 0.15 * delta;
 			if (item.alpha <= 0) {
 				app.ticker.remove(animationUpdate);
 			}
@@ -292,8 +299,8 @@ const Memo = function (selector) {
 	}
 	function fadeIn(item) {
 		item.alpha = 0;
-		function animationUpdate() {
-			item.alpha += 0.05;
+		function animationUpdate(delta) {
+			item.alpha += 0.15 * delta;
 			if (item.alpha >= 1) {
 				app.ticker.remove(animationUpdate);
 			}

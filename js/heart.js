@@ -1,6 +1,8 @@
 const Heart = function (selector) {
 	// Начальные данные
 
+	const ASSETS_PATH = './assets/img/';
+
 	const cardSize = 22;
 	const cardMargin = 2;
 	const cardsSource = [
@@ -41,6 +43,9 @@ const Heart = function (selector) {
 	});
 	gameContainer.appendChild(app.view);
 
+	app.renderer.plugins.interaction.autoPreventDefault = false;
+	app.renderer.view.style.touchAction = 'auto';
+	
 	// Проверка фокуса на данном canvas
 
 	gameContainer.querySelector('canvas').addEventListener('click', () => {
@@ -90,7 +95,7 @@ const Heart = function (selector) {
 
 	// Создание игрока
 
-	let player = new PIXI.Sprite.from('./assets/img/player.svg');
+	let player = new PIXI.Sprite.from(`${ASSETS_PATH}player.svg`);
 
 	app.stage.addChild(player);
 
@@ -100,12 +105,12 @@ const Heart = function (selector) {
 	endScreen.width = 375;
 	endScreen.height = 667;
 	endScreen.alpha = 0;
-	let endScreenWin = new PIXI.Texture.from(`./assets/img/win-screen.png`);
-	let endScreenLoss = new PIXI.Texture.from(`./assets/img/loss-screen.png`);
+	let endScreenWin = new PIXI.Texture.from(`${ASSETS_PATH}win-screen.png`);
+	let endScreenLoss = new PIXI.Texture.from(`${ASSETS_PATH}loss-screen.png`);
 	let endScreenImg = new PIXI.Sprite.from(endScreenWin);
 	endScreenImg.width = 375;
 	endScreenImg.height = 667;
-	let screenBtn = new PIXI.Sprite.from('./assets/img/restart-btn.png');
+	let screenBtn = new PIXI.Sprite.from(`${ASSETS_PATH}restart-btn.png`);
 	screenBtn.width = 82;
 	screenBtn.height = 82;
 	app.stage.addChild(endScreen);
@@ -163,7 +168,7 @@ const Heart = function (selector) {
 	function drawBtn(imgsrc, imgx, imgy, imgwidth, imgheight, x, _fun) {
 		let btn = new PIXI.Container();
 		let graph = new PIXI.Graphics();
-		let image = new PIXI.Sprite.from(imgsrc);
+		let image = new PIXI.Sprite.from(`${ASSETS_PATH}${imgsrc}.png`);
 		graph.beginFill(0xfde033);
 		graph.drawRect(0, 0, 121, 74);
 		graph.endFill();
@@ -189,17 +194,9 @@ const Heart = function (selector) {
 
 	function drawNav() {
 		nav.children = [];
-		new drawBtn('./assets/img/left-arrow.png', 51, 23, 19.2, 32, 0, moveLeft);
-		new drawBtn('./assets/img/circle.png', 45, 23, 32, 32, 127, shoot);
-		new drawBtn(
-			'./assets/img/right-arrow.png',
-			55,
-			23,
-			19.2,
-			32,
-			254,
-			moveRight
-		);
+		new drawBtn('left-arrow', 51, 23, 19.2, 32, 0, moveLeft);
+		new drawBtn('circle', 45, 23, 32, 32, 127, shoot);
+		new drawBtn('right-arrow', 55, 23, 19.2, 32, 254, moveRight);
 	}
 
 	
@@ -262,10 +259,10 @@ const Heart = function (selector) {
 			return index <= cardsArray.length;
 		});
 
-		function animationUpdate() {
+		function animationUpdate(delta) {
+			
 			// Для анимации игра должна быть не закончена
 			if(!gameEnded){
-
 				// Крайний не уничтоженный блок в колонке полета снаряда
 
 				let undestroyedCards = existsIndex.filter((index) => {
@@ -280,7 +277,7 @@ const Heart = function (selector) {
 				if (nearbyCard !== undefined) {
 					nearbyCardY = nearbyCard.y + nearbyCard.height + grid.y;
 				}
-				bullet.y -= 2;
+				bullet.y -= 5 * delta;
 
 				// Просчет столкновения
 
@@ -289,7 +286,7 @@ const Heart = function (selector) {
 					
 					if (nearbyCard.id === 1) {
 						nearbyCard.alpha = 0;
-						gameEnd('lose');
+						gameEnd('loss');
 						destroyBullet();
 						battleground.children = [];
 					}else if (nearbyCard.id === 2) {
@@ -312,7 +309,6 @@ const Heart = function (selector) {
 			shootCount -= 1;
 		}
 	}
-	
 	// Движение игрока влево
 
 	function moveLeft() {
@@ -403,29 +399,22 @@ const Heart = function (selector) {
 		gameEnded = true;
 		
 
-		if(result === 'lose'){
-			endScreenImg.texture = endScreenLoss;
-			setTimeout(() => {
-				fadeIn(endScreen);
-				endScreen.interactive = true;
-				screenBtn.interactive = true;
-			}, 500);
+		if(result === 'loss'){
+			endScreenImg.texture = endScreenLoss;	
 		}else{
-			endScreenImg.texture = endScreenWin;
-			setTimeout(() => {
-				fadeIn(endScreen);
-				endScreen.interactive = true;
-				screenBtn.interactive = true;
-			}, 1000);
+			endScreenImg.texture = endScreenWin;	
 		}
+		fadeIn(endScreen);
+		endScreen.interactive = true;
+		screenBtn.interactive = true;
 	}
 
 	// Анимационные эффекты
 
 	function fadeOut(item) {
 		item.alpha = 1;
-		function animationUpdate() {
-			item.alpha -= 0.05;
+		function animationUpdate(delta) {
+			item.alpha -= 0.15 * delta;
 			if (item.alpha <= 0) {
 				app.ticker.remove(animationUpdate);
 			}
@@ -434,8 +423,8 @@ const Heart = function (selector) {
 	}
 	function fadeIn(item) {
 		item.alpha = 0;
-		function animationUpdate() {
-			item.alpha += 0.05;
+		function animationUpdate(delta) {
+			item.alpha += 0.15 * delta;
 			if (item.alpha >= 1) {
 				app.ticker.remove(animationUpdate);
 			}
